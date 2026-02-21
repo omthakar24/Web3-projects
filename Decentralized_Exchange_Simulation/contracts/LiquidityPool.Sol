@@ -1,0 +1,83 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.28;
+
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+
+contract LiquidityPool {
+
+    address public tokenA;
+    address public tokenB;
+
+    uint public reserveA;
+    uint public reserveB;
+
+    event LiquidityAdded(address indexed provider, uint amountA, uint amountB);
+    event Swap(address indexed user, address tokenIn, uint amountIn, uint amountOut);
+
+    constructor(address _tokenA, address _tokenB) {
+        require(_tokenA != _tokenB, "Tokens must be different");
+        tokenA = _tokenA;
+        tokenB = _tokenB;
+    }
+
+    function addLiquidity(uint amountA, uint amountB) external {
+
+        require(amountA > 0 && amountB > 0, "Invalid amounts");
+
+        IERC20(tokenA).transferFrom(msg.sender, address(this), amountA);
+        IERC20(tokenB).transferFrom(msg.sender, address(this), amountB);
+
+        reserveA += amountA;
+        reserveB += amountB;
+
+        emit LiquidityAdded(msg.sender, amountA, amountB);
+    }
+
+    function swapAforB(uint amountAIn) external {
+
+        require(amountAIn > 0, "Invalid input");
+        require(reserveA > 0 && reserveB > 0, "No liquidity");
+
+        IERC20(tokenA).transferFrom(msg.sender, address(this), amountAIn);
+
+        uint amountInWithFee = (amountAIn * 997) / 1000;
+
+        uint amountBOut = (amountInWithFee * reserveB) / (reserveA + amountInWithFee);
+
+        require(amountBOut > 0, "Insufficient output");
+        require(amountBOut < reserveB, "Not enough liquidity");
+
+        IERC20(tokenB).transfer(msg.sender, amountBOut);
+
+        reserveA += amountAIn;
+        reserveB -= amountBOut;
+
+        emit Swap(msg.sender, tokenA, amountAIn, amountBOut);
+    }
+
+    function swapBforA(uint amountBIn) external {
+
+        require(amountBIn > 0, "Invalid input");
+        require(reserveA > 0 && reserveB > 0, "No liquidity");
+
+        IERC20(tokenB).transferFrom(msg.sender, address(this), amountBIn);
+
+        uint amountInWithFee = (amountBIn * 997) / 1000;
+
+        uint amountAOut = (amountInWithFee * reserveA) / (reserveB + amountInWithFee);
+
+        require(amountAOut > 0, "Insufficient output");
+        require(amountAOut < reserveA, "Not enough liquidity");
+
+        IERC20(tokenA).transfer(msg.sender, amountAOut);
+
+        reserveB += amountBIn;
+        reserveA -= amountAOut;
+
+        emit Swap(msg.sender, tokenB, amountBIn, amountAOut);
+    }
+
+    function getReserves() external view returns (uint, uint) {
+        return (reserveA, reserveB);
+    }
+}
