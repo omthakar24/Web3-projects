@@ -16,13 +16,13 @@ async function main(){
     const receiver_balance = await provider.getBalance(receiver);
     console.log("Receiver Balance before TXN:"+ethers.formatUnits(receiver_balance,18))
 
-   const tx = await wallet.sendTransaction({
+  /* const tx = await wallet.sendTransaction({
     to: receiver,
     value: ethers.parseUnits("0.01",18)    
 })
 const receipt = await tx.wait()
 console.log(tx)
-console.log(receipt)
+console.log(receipt)*/
 
 console.log("Wallet has "+ethers.formatUnits(balance,18)+" ETH")
 console.log("Receiver Balance after TXN:"+ethers.formatUnits(receiver_balance,18))
