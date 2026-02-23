@@ -1,86 +1,147 @@
 <!DOCTYPE html>
 <html>
+<head>
     <title>Wallet Fetch</title>
-    <body>
-        <input type="text" placeholder="Enter the address" id="address" required><br><br>
-        <button onclick="getBalance()">Check Balance</button>
-        <pre id = "result"></pre>
-        <style>
-         
-body {
-  margin: 0;
-  font-family: Arial, sans-serif;
-  background-color: #0f172a;
-  color: white;
-
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
-}
-
-
-.container {
-  text-align: center;
-  background-color: #1e293b;
-  padding: 40px;
-  border-radius: 10px;
-  width: 400px;
-}
-
-
-input {
-  width: 100%;
-  padding: 10px;
-  margin-top: 15px;
-  border-radius: 6px;
-  border: none;
-  outline: none;
-}
-
-
-button {
-  margin-top: 15px;
-  padding: 10px 20px;
-  border-radius: 6px;
-  border: none;
-  cursor: pointer;
-  font-weight: bold;
-  background-color: #3b82f6;
-  color: white;
-}
-
-button:hover {
-  opacity: 0.8;
-}
-
-/* Result box */
-pre {
-  margin-top: 20px;
-  background-color: #0f172a;
-  padding: 15px;
-  border-radius: 6px;
-  overflow-x: auto;
-}
-        </style>
-
-    <script>
-        async function getBalance(){
-           const address = document.getElementById("address").value
-
-           if(!address){
-            alert("Enter the address bozo")
-            return
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #0f172a, #1e293b);
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
         }
-        try{
-            const response = await fetch("/balance/"+address)
-            const data = await response.json()
 
-            document.getElementById("result").textContent = JSON.stringify(data,null,2)
-        }catch(err){
-            console.error(err)
+        .container {
+            background-color: #111827;
+            padding: 40px;
+            border-radius: 12px;
+            width: 420px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            text-align: center;
         }
+
+        h2 {
+            margin-bottom: 20px;
         }
-    </script>
-       </body>
+
+        input {
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid #374151;
+            background-color: #1f2937;
+            color: white;
+            font-size: 14px;
+        }
+
+        input:focus {
+            border-color: #3b82f6;
+            outline: none;
+        }
+
+        button {
+            width: 100%;
+            margin-top: 20px;
+            padding: 14px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 15px;
+            background: linear-gradient(90deg, #3b82f6, #2563eb);
+            color: white;
+            transition: all 0.3s ease;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(59,130,246,0.4);
+        }
+
+        .result-box {
+            margin-top: 25px;
+            padding: 15px;
+            border-radius: 8px;
+            background-color: #1f2937;
+            text-align: left;
+            display: none;
+        }
+
+        .result-item {
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .label {
+            color: #9ca3af;
+        }
+
+        .value {
+            font-weight: bold;
+            color: #3b82f6;
+        }
+
+        .error {
+            color: #ef4444;
+            margin-top: 15px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Wallet Balance Checker</h2>
+
+    <input type="text" placeholder="Enter wallet address" id="address" required>
+    <button onclick="getBalance()">Check Balance</button>
+
+    <div id="resultBox" class="result-box"></div>
+    <div id="error" class="error"></div>
+</div>
+
+<script>
+    async function getBalance() {
+        const address = document.getElementById("address").value.trim();
+        const resultBox = document.getElementById("resultBox");
+        const errorBox = document.getElementById("error");
+
+        resultBox.style.display = "none";
+        errorBox.textContent = "";
+
+        if (!address) {
+            errorBox.textContent = "Enter a valid wallet address.";
+            return;
+        }
+
+        try {
+            const response = await fetch("/balance/" + address);
+            const data = await response.json();
+
+            resultBox.innerHTML = `
+                <div class="result-item">
+                    <span class="label">Address:</span>
+                    <span class="value">${data.address || address}</span>
+                </div>
+                <div class="result-item">
+                    <span class="label">Balance:</span>
+                    <span class="value">${data.balance || "0"}</span>
+                </div>
+                <div class="result-item">
+                    <span class="label">Network:</span>
+                    <span class="value">${data.network || "Unknown"}</span>
+                </div>
+            `;
+
+            resultBox.style.display = "block";
+        } catch (err) {
+            errorBox.textContent = "Failed to fetch balance.";
+            console.error(err);
+        }
+    }
+</script>
+
+</body>
 </html>
